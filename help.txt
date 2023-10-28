@@ -1,0 +1,7 @@
+--- --- ---
+Welcome to rat-music! The following commands can be used to operate the program:
+- q/Q/quit -- Quits the program
+- m/M/mute -- Mutes and unmutes audio
+- v/V/volume [vol] -- sets the volume from 0.0 to 1.0
+- p/P/play [path] -- adds the file at [path] to the queue
+--- --- ---
