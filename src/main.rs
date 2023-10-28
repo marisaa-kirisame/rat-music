@@ -44,11 +44,17 @@ impl Song {
         }
     }
 
-    fn new_from_file(path: Path) -> Option<Song> {
-        let tag = Tag::read_from_path(path);
-        return Some(Song{
-            
-        })
+    fn new_from_file(path: Box<Path>) -> Song {
+        let tag = Tag::read_from_path(path).unwrap();
+        Song {
+            title: tag.title().expect("Unknown").to_owned(),
+            author: tag.artist().expect("Unknown").to_owned()
+        }
+    }
+
+
+    fn as_str(&self) -> String {
+        format!("{} - {}", self.author.clone(), self.title.clone())
     }
 }
 
@@ -87,9 +93,7 @@ fn main() -> Result<()> {
     // Initialize rodio stream and sink for audio playback
     let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
 
-    //let file1 = std::fs::File::open("assets/drill.mp3").unwrap();
     let sink = rodio::Sink::try_new(&handle).unwrap();
-    //sink.append(rodio::Decoder::new(BufReader::new(file1)).unwrap());
 
     startup()?;
     let status = run(sink);
@@ -134,8 +138,9 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
                             .set_directory("/")
                             .pick_file()
                             .unwrap();
-                        let file = std::fs::File::open(file_path_buffer).unwrap();
+                        let file = std::fs::File::open(file_path_buffer.clone()).unwrap();
                         sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
+                        state.current_playing = Some(Song::new_from_file(file_path_buffer.into_boxed_path()));
                     },
                     _ => {},
                 }
@@ -146,8 +151,12 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
 }
 
 fn ui(state: &mut ProgramState, frame: &mut Frame<'_>) {
+    let track_name: String = match &state.current_playing {
+        None => String::from("unknown"),
+        Some(song) => song.as_str()
+    };
     frame.render_widget(
-        Paragraph::new("Now playing: nothing")
+        Paragraph::new(format!("Now playing: {}", track_name ))
                 .block(Block::default().title("Welcome to rat-music!").borders(Borders::all())),
                 frame.size()
     );
