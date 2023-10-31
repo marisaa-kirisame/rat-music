@@ -2,76 +2,25 @@ extern crate rodio;
 extern crate rfd;
 extern crate id3;
 
-use id3::{Tag, TagLike};
+use id3::TagLike;
 use rfd::FileDialog;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Sink, Split, stderr};
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::*;
-use std::{io, thread};
-use std::cmp::Ordering;
+use std::io::{BufRead, BufReader, stderr};
 use std::ops::{Add, Deref, Index, Sub};
-use std::path::Path;
-use std::time::Duration;
 use ratatui::backend::CrosstermBackend;
-use ratatui::buffer::Buffer;
 use ratatui::Terminal;
 use rodio::*;
 use anyhow::Result;
-use crossterm::event::{self, KeyCode, KeyEventKind};
+use crossterm::event::{self, KeyCode};
 use crossterm::ExecutableCommand;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::widgets::{Block, Borders, Paragraph};
+use song::Song;
+use state::ProgramState;
 
-struct Song {
-    title: String,
-    author: String
-}
+mod song;
+mod state;
 
 pub type Frame<'a> = ratatui::Frame<'a, CrosstermBackend<std::io::Stderr>>;
-struct ProgramState {
-    exit: bool,
-    mute: bool,
-    volume: f32,
-    current_playing: Option<Song>
-}
-
-impl Song {
-    fn new(title: String, author: String) -> Song {
-        Song {
-            title,
-            author
-        }
-    }
-
-    fn new_from_file(path: Box<Path>) -> Song {
-        let tag = Tag::read_from_path(path).unwrap();
-        Song {
-            title: tag.title().expect("Unknown").to_owned(),
-            author: tag.artist().expect("Unknown").to_owned()
-        }
-    }
-
-
-    fn as_str(&self) -> String {
-        format!("{} - {}", self.author.clone(), self.title.clone())
-    }
-}
-
-impl ProgramState {
-    fn new() -> ProgramState {
-        ProgramState {
-            exit: false,
-            mute: false,
-            volume: 0.5,
-            current_playing: None
-        }
-    }
-
-    fn quit(&mut self) {
-        self.exit = true;
-    }
-}
 
 
 fn clamp(value: f32, lower_bounds: f32, upper_bounds: f32) -> f32 {
