@@ -110,6 +110,7 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
     }
 
     state.volume = sink.volume();
+    state.speed = sink.speed();
 
     Ok(())
 }

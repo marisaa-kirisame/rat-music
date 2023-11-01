@@ -16,7 +16,7 @@ impl Song {
     }
 
     pub fn new_from_file(path: Box<Path>) -> Song {
-        let tag = Tag::read_from_path(path).unwrap();
+        let tag = Tag::read_from_path(path).unwrap(); // TODO: This panics on most files!!!!!!! Hahahahahaha fix this silly
         Song {
             title: tag.title().expect("Unknown").to_owned(),
             author: tag.artist().expect("Unknown").to_owned()
