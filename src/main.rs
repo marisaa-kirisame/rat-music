@@ -2,6 +2,7 @@ extern crate rodio;
 extern crate rfd;
 extern crate id3;
 
+use std::fmt::format;
 use id3::TagLike;
 use rfd::FileDialog;
 use std::io::{BufRead, BufReader, stderr};
@@ -13,6 +14,7 @@ use anyhow::Result;
 use crossterm::event::{self, KeyCode};
 use crossterm::ExecutableCommand;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use song::Song;
 use state::ProgramState;
@@ -85,30 +87,50 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
                         let file_path_buffer = FileDialog::new()
                             .add_filter("music", &["mp3", "flac", "wav", "ogg"])
                             .set_directory("/")
-                            .pick_file()
-                            .unwrap();
-                        let file = std::fs::File::open(file_path_buffer.clone()).unwrap();
-                        sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
-                        state.current_playing = Some(Song::new_from_file(file_path_buffer.into_boxed_path()));
+                            .pick_file();
+                        if file_path_buffer.is_some()
+                        {
+                            let file_path_buffer = file_path_buffer.unwrap();
+                            let file = std::fs::File::open(file_path_buffer.clone()).unwrap();
+                            sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
+                            state.add_to_queue(Song::new_from_file(file_path_buffer.into_boxed_path()));
+                        }
                     },
+                    KeyCode::Char('s') => {
+                        sink.skip_one();
+                        if state.queue.len() > 0
+                        { state.queue.remove(0); }
+                    },
+                    KeyCode::Char('h') => sink.set_speed(sink.speed() + 0.1),
+                    KeyCode::Char('j') => sink.set_speed(sink.speed() - 0.1),
                     _ => {},
                 }
             }
         }
     }
+
+    state.volume = sink.volume();
+
     Ok(())
 }
 
 fn ui(state: &mut ProgramState, frame: &mut Frame<'_>) {
-    let track_name: String = match &state.current_playing {
-        None => String::from("unknown"),
+    let track_name: String = match &state.queue.get(0) {
+        None => String::from("Nothing"),
         Some(song) => song.as_str()
     };
+
+    let mut vol_position: Rect = Default::default();
+    vol_position.x = frame.size().x + 1;
+    vol_position.y = frame.size().y + 1;
     frame.render_widget(
         Paragraph::new(format!("Now playing: {}", track_name ))
                 .block(Block::default().title("Welcome to rat-music!").borders(Borders::all())),
                 frame.size()
     );
+
+    frame.render_widget(Paragraph::new(format!("Vol: {}", state.volume)), Rect{x: 1, y:2, width: 8, height: 1});
+    frame.render_widget(Paragraph::new(format!("Speed: {}", state.speed)), Rect{x: 1, y:3, width: 14, height: 1});
 }
 
 fn startup() -> Result<()> {
