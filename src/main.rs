@@ -76,6 +76,11 @@ fn run(mut sink: rodio::Sink) -> Result<()> {
 }
 
 fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
+
+    // TODO: The song title in ProgramState doesn't change when the song ends!
+    // Detect whenever the sink swaps the playing song and update the queue accordingly.
+    // Possible solution is to extend the Sink struct with a function that lets the user view the queue.
+
     if event::poll(std::time::Duration::from_millis(250))? {
         if let event::Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
@@ -103,6 +108,14 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
                     },
                     KeyCode::Char('h') => sink.set_speed(sink.speed() + 0.1),
                     KeyCode::Char('j') => sink.set_speed(sink.speed() - 0.1),
+                    KeyCode::Char(' ') => {
+                        if sink.is_paused() {
+                            sink.play();
+                        }
+                        else {
+                            sink.pause();
+                        }
+                    },
                     _ => {},
                 }
             }
@@ -130,8 +143,8 @@ fn ui(state: &mut ProgramState, frame: &mut Frame<'_>) {
                 frame.size()
     );
 
-    frame.render_widget(Paragraph::new(format!("Vol: {}", state.volume)), Rect{x: 1, y:2, width: 8, height: 1});
-    frame.render_widget(Paragraph::new(format!("Speed: {}", state.speed)), Rect{x: 1, y:3, width: 14, height: 1});
+    frame.render_widget(Paragraph::new(format!("Vol: {}", state.volume.trunc())), Rect{x: 1, y:2, width: 8, height: 1});
+    frame.render_widget(Paragraph::new(format!("Speed: {}", state.speed.trunc())), Rect{x: 1, y:3, width: 14, height: 1});
 }
 
 fn startup() -> Result<()> {
