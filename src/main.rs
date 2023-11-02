@@ -54,10 +54,8 @@ fn main() -> Result<()> {
 }
 
 fn run(mut sink: rodio::Sink) -> Result<()> {
-    // ratatui terminal
     let mut terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
 
-    // app struct
     let mut state = ProgramState::new();
 
     loop {
@@ -85,8 +83,8 @@ fn update(sink: &mut rodio::Sink, state: &mut ProgramState) -> Result<()> {
         if let event::Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Press {
                 match key.code {
-                    KeyCode::Up => sink.set_volume(sink.volume()+0.1), // raise volume
-                    KeyCode::Down => sink.set_volume(sink.volume()-0.1), // lower vol
+                    KeyCode::Up => sink.set_volume(sink.volume()+0.1),
+                    KeyCode::Down => sink.set_volume(sink.volume()-0.1),
                     KeyCode::Char('q') => state.quit(),
                     KeyCode::Char('p') => {
                         let file_path_buffer = FileDialog::new()

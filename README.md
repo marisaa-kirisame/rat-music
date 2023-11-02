@@ -1,8 +1,9 @@
+> Simple Rust TUI-based music player
+> 
 # rat music
-Simple commandline UI music player I'm making to learn Rust. Uses [rodio](https://github.com/RustAudio/rodio) for audio playback and [ratatui](https://github.com/ratatui-org/ratatui) for TUI. Work in progress, please be patient.
+Commandline music player I'm making in order to learn Rust. Uses [rodio](https://github.com/RustAudio/rodio) for audio playback and [ratatui](https://github.com/ratatui-org/ratatui) for the TUI. Work in progress, please be patient. You can find the key bindings below, they are being regularly updated as I develop the program.
 
-# Basic operation of the program
-In the current state, the music player features 3 main controls:
+# Key bindings
 | Key | Function |
 | --- | --- |
 | q | Quits. |
